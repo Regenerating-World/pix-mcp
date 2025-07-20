@@ -16,8 +16,10 @@
   ],
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "MCP_MODE=http node dist/index.js",
+    "start:local": "node dist/index.js",
     "dev": "tsx src/index.ts",
+    "dev:http": "MCP_MODE=http tsx src/index.ts",
     "test": "jest",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write src/**/*.ts",

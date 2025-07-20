@@ -38,8 +38,8 @@ npx pix-mcp-server
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/pix-mcp-server.git
-cd pix-mcp-server
+git clone https://github.com/Regenerating-World/pix-mcp.git
+cd pix-mcp
 
 # Install and setup
 npm run setup
