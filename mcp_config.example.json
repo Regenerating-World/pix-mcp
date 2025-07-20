@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "pix-mcp": {
+      "command": "node",
+      "args": ["./dist/index.js"],
+      "env": {
+        "EFI_CLIENT_ID": "your_efi_client_id_here",
+        "EFI_CLIENT_SECRET": "your_efi_client_secret_here",
+        "EFI_SANDBOX": "true",
+        "EFI_PIX_KEY": "your-pix-key@example.com"
+      }
+    }
+  }
+}
