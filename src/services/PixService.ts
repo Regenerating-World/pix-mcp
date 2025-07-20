@@ -13,13 +13,13 @@ export class PixService {
     // Try each provider in order until one succeeds
     for (const provider of this.providers) {
       try {
-        console.error(`Attempting to create Pix charge with provider: ${provider.name}`);
+        // Attempting to create Pix charge with provider
         const result = await provider.createPixCharge(request);
-        console.error(`Successfully created Pix charge with provider: ${provider.name}`);
+        // Successfully created Pix charge
         return result;
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Unknown provider error');
-        console.error(`Provider ${provider.name} failed:`, lastError.message);
+        // Provider failed, trying next provider
         
         // Continue to next provider
         continue;

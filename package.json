@@ -1,16 +1,31 @@
 {
-  "name": "pix-mcp-server",
+  "name": "pix-mcp",
   "version": "1.0.0",
   "description": "Production-grade MCP server for Pix payments in Brazil",
   "main": "dist/index.js",
   "type": "module",
+  "bin": {
+    "pix-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE",
+    "mcp_config.example.json",
+    ".env.example"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
     "test": "jest",
     "lint": "eslint src/**/*.ts",
-    "format": "prettier --write src/**/*.ts"
+    "format": "prettier --write src/**/*.ts",
+    "validate": "node scripts/setup-validator.js",
+    "setup": "npm install && npm run build && npm run validate",
+    "wizard": "node scripts/setup-wizard.js",
+    "prepublishOnly": "npm run test && npm run build",
+    "postinstall": "echo '\n🎉 Pix MCP installed! Run \"npm run wizard\" for guided setup or \"npm run validate\" to check your configuration.'"
   },
   "keywords": [
     "mcp",
@@ -18,10 +33,21 @@
     "payments",
     "brazil",
     "ai",
-    "claude"
+    "claude",
+    "model-context-protocol",
+    "efi",
+    "gerencianet"
   ],
   "author": "Pix MCP Team",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Regenerating-World/pix-mcp.git"
+  },
+  "homepage": "https://github.com/Regenerating-World/pix-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/Regenerating-World/pix-mcp/issues"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.5.0",
     "axios": "^1.6.0",
@@ -44,5 +70,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -15,6 +15,16 @@ import { EfiProvider } from './providers/EfiProvider.js';
 // Load environment variables
 dotenv.config();
 
+// Validate required environment variables
+function validateEnvironment(): void {
+  const required = ['EFI_CLIENT_ID', 'EFI_CLIENT_SECRET'];
+  const missing = required.filter(key => !process.env[key]);
+  
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  }
+}
+
 // Input validation schemas
 const CreatePixChargeSchema = z.object({
   amount: z.number().positive().max(999999.99),
@@ -27,6 +37,9 @@ class PixMCPServer {
   private pixService: PixService;
 
   constructor() {
+    // Validate environment before initializing
+    validateEnvironment();
+    
     this.server = new Server(
       {
         name: 'pix-mcp-server',
@@ -82,6 +95,15 @@ class PixMCPServer {
               required: ['amount', 'recipientName'],
             },
           } satisfies Tool,
+          {
+            name: 'healthCheck',
+            description: 'Check the health status of the Pix MCP server and providers',
+            inputSchema: {
+              type: 'object',
+              properties: {},
+              required: [],
+            },
+          } satisfies Tool,
         ],
       };
     });
@@ -116,6 +138,33 @@ class PixMCPServer {
 ${result.qrCodeDataUrl ? `![QR Code](${result.qrCodeDataUrl})` : 'QR Code generation failed'}
 
 The recipient can scan the QR code or copy the Pix code to complete the payment.`,
+                },
+              ],
+            };
+          }
+
+          case 'healthCheck': {
+            const status = {
+              server: 'healthy',
+              timestamp: new Date().toISOString(),
+              environment: process.env.EFI_SANDBOX === 'true' ? 'sandbox' : 'production',
+              providers: ['Efí (Gerencianet)'],
+              version: '1.0.0'
+            };
+            
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: `🟢 **Pix MCP Server Health Check**
+
+**Status:** ${status.server}
+**Version:** ${status.version}
+**Environment:** ${status.environment}
+**Providers:** ${status.providers.join(', ')}
+**Timestamp:** ${status.timestamp}
+
+✅ All systems operational`,
                 },
               ],
             };

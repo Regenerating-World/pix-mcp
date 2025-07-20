@@ -9,30 +9,40 @@ A production-grade Model Context Protocol (MCP) server that enables AI agents (C
 - **Production-ready**: Comprehensive error handling and logging
 - **Type-safe**: Full TypeScript implementation with Zod validation
 - **QR Code generation**: Automatic QR code creation for Pix payments
+- **Health monitoring**: Built-in health check and validation tools
+- **NPM distribution**: Easy installation via npm package manager
 
-## 🛠️ Installation
+## 🔧 Installation
+
+### Option 1: NPM Installation (Recommended)
+
+```bash
+# Install globally
+npm install -g pix-mcp-server
+
+# Verify installation
+pix-mcp --version
+```
+
+### Option 2: Local Installation
+
+```bash
+# Install in your project
+npm install pix-mcp-server
+
+# Run locally
+npx pix-mcp-server
+```
+
+### Option 3: From Source
 
 ```bash
 # Clone the repository
 git clone https://github.com/your-org/pix-mcp-server.git
 cd pix-mcp-server
 
-# Install dependencies
-npm install
-
-# Copy environment template
-cp .env.example .env
-
-# Configure your Efí credentials in .env
-# EFI_CLIENT_ID=your_client_id
-# EFI_CLIENT_SECRET=your_client_secret
-# EFI_SANDBOX=true
-
-# Build the project
-npm run build
-
-# Start the server
-npm start
+# Install and setup
+npm run setup
 ```
 
 ## 🔧 Configuration
