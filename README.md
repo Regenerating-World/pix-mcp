@@ -12,38 +12,86 @@ A lightweight Model Context Protocol (MCP) server that enables AI agents (Claude
 - **📦 Zero Dependencies**: No external API keys or services required
 - **🌍 Open & Accessible**: Works without any registration or credentials
 
-## 🔧 Installation
-
-### Option 1: NPM Installation (Recommended)
+## 🚀 Quick Start
 
 ```bash
 # Install globally
 npm install -g pix-mcp-server
 
-# Verify installation
-pix-mcp --version
+# Run the server
+pix-mcp-server --http --http-port 3000
 ```
 
-### Option 2: Local Installation
+## 🔧 Usage
+
+### MCP Mode
 
 ```bash
-# Install in your project
-npm install pix-mcp-server
-
-# Run locally
-npx pix-mcp-server
+# Start in MCP mode (default)
+pix-mcp-server
 ```
 
-### Option 3: From Source
+### HTTP Mode
+
+```bash
+# Start in HTTP mode
+pix-mcp-server --http --http-port 3000
+```
+
+### Making Requests
+
+#### HTTP API
+
+```bash
+curl -X POST http://localhost:3000/generate-static-pix \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pixKey": "12345678900",
+    "amount": 100.50,
+    "recipientName": "John Doe",
+    "recipientCity": "Sao Paulo",
+    "description": "Payment for services"
+  }'
+```
+
+#### MCP Tool
+
+```typescript
+const result = await mcpClient.callTool('generateStaticPix', {
+  pixKey: '12345678900',
+  amount: 100.50,
+  recipientName: 'John Doe',
+  recipientCity: 'Sao Paulo',
+  description: 'Payment for services'
+});
+```
+
+## 🚀 Deployment
+
+### Railway
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https%3A%2F%2Fgithub.com%2FRegenerating-World%2Fpix-mcp)
+
+### Manual Deployment
 
 ```bash
 # Clone the repository
 git clone https://github.com/Regenerating-World/pix-mcp.git
 cd pix-mcp
 
-# Install and setup
-npm run setup
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Start the server
+NODE_ENV=production node dist/index.js --http --http-port $PORT
 ```
+
+## 📝 License
+
+MIT
 
 ## 🔧 Configuration
 

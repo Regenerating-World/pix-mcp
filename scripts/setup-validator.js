@@ -2,15 +2,8 @@
 
 /**
  * Setup Validation Script for Pix MCP Server
- * Validates environment configuration and dependencies
+ * Validates basic environment configuration for static Pix server
  */
-
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 class SetupValidator {
   constructor() {
@@ -37,48 +30,58 @@ class SetupValidator {
   async validateEnvironment() {
     this.log('info', 'Validating environment configuration...');
     
-    // Check for .env file
-    const envPath = path.join(__dirname, '../.env');
-    if (!fs.existsSync(envPath)) {
-      this.log('warning', '.env file not found. Using environment variables or defaults.');
+    // Check for PORT environment variable
+    if (process.env.PORT) {
+      this.log('info', `Using custom port: ${process.env.PORT}`);
     } else {
-      this.log('success', '.env file found');
+      this.log('info', 'Using default port (3000)');
     }
+    
+    this.log('success', 'No external dependencies or API keys required');
+  }
 
-    // Required environment variables
-    const required = [
-      'EFI_CLIENT_ID',
-      'EFI_CLIENT_SECRET'
-    ];
-
-    const optional = [
-      'EFI_SANDBOX',
-      'PORT',
-      'NODE_ENV'
-    ];
-
-    // Check required variables
-    for (const variable of required) {
-      if (!process.env[variable]) {
-        this.log('error', `Missing required environment variable: ${variable}`);
-      } else {
-        this.log('success', `Required variable ${variable} is set`);
-      }
+  async validateNodeVersion() {
+    const nodeVersion = process.versions.node;
+    const majorVersion = parseInt(nodeVersion.split('.')[0], 10);
+    
+    if (majorVersion < 16) {
+      this.log('error', `Node.js version ${nodeVersion} is not supported. Please use Node.js 16 or higher.`);
+    } else {
+      this.log('success', `Using Node.js ${nodeVersion}`);
     }
+  }
 
-    // Check optional variables
-    for (const variable of optional) {
-      if (!process.env[variable]) {
-        this.log('warning', `Optional variable ${variable} not set (using default)`);
-      } else {
-        this.log('success', `Optional variable ${variable} is set`);
-      }
+  async run() {
+    console.log('\n🔍 Validating Pix MCP Server setup...\n');
+    
+    await this.validateNodeVersion();
+    await this.validateEnvironment();
+    
+    console.log('\n📊 Validation Summary:');
+    console.log(`✅ ${this.success.length} checks passed`);
+    
+    if (this.warnings.length > 0) {
+      console.log(`⚠️  ${this.warnings.length} warnings`);
+      this.warnings.forEach(warning => console.log(`  - ${warning}`));
     }
+    
+    if (this.errors.length > 0) {
+      console.log(`❌ ${this.errors.length} errors found`);
+      this.errors.forEach(error => console.log(`  - ${error}`));
+      process.exit(1);
+    }
+    
+    console.log('\n✨ Setup validation completed successfully!\n');
+    return true;
+  }
+}
 
-    // Validate specific values
-    if (process.env.EFI_SANDBOX && !['true', 'false'].includes(process.env.EFI_SANDBOX)) {
-      this.log('warning', 'EFI_SANDBOX should be "true" or "false"');
-    }
+// Run the validator
+const validator = new SetupValidator();
+validator.run().catch(error => {
+  console.error('Error during validation:', error);
+  process.exit(1);
+});
 
     if (process.env.PORT && isNaN(parseInt(process.env.PORT))) {
       this.log('warning', 'PORT should be a valid number');
