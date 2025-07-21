@@ -1,16 +1,16 @@
 # Pix MCP Server
 
-A production-grade Model Context Protocol (MCP) server that enables AI agents (Claude, Cursor, Windsurf) to generate and manage Pix payments via natural-language prompts.
+A lightweight Model Context Protocol (MCP) server that enables AI agents (Claude, Cursor, Windsurf) to generate static Pix QR codes via natural-language prompts.
 
 ## 🚀 Features
 
-- **Phase 1 (MVP)**: `createPixCharge` tool with Efí provider
-- **Multi-provider support**: Built-in fallback system (Phase 2)
-- **Production-ready**: Comprehensive error handling and logging
-- **Type-safe**: Full TypeScript implementation with Zod validation
-- **QR Code generation**: Automatic QR code creation for Pix payments
-- **Health monitoring**: Built-in health check and validation tools
-- **NPM distribution**: Easy installation via npm package manager
+- **🔧 MCP Tool**:
+  - `generateStaticPix` - Generate static Pix QR codes for any Pix key (no API required)
+- **🚀 Production-ready**: Comprehensive error handling and logging
+- **🔒 Type-safe**: Full TypeScript implementation with Zod validation
+- **📱 QR Code generation**: Automatic QR code creation for Pix payments
+- **📦 Zero Dependencies**: No external API keys or services required
+- **🌍 Open & Accessible**: Works without any registration or credentials
 
 ## 🔧 Installation
 

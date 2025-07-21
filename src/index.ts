@@ -7,45 +7,31 @@ import { URL } from 'url';
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
-  Tool,
 } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
-import dotenv from 'dotenv';
-import { PixService } from './services/PixService.js';
-import { EfiProvider } from './providers/EfiProvider.js';
+import { StaticPixService } from './services/StaticPixService.js';
 
-// Load environment variables
-dotenv.config();
-
-// Validate required environment variables
-function validateEnvironment(): void {
-  const required = ['EFI_CLIENT_ID', 'EFI_CLIENT_SECRET'];
-  const missing = required.filter(key => !process.env[key]);
-  
-  if (missing.length > 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
-  }
-}
-
-// Input validation schemas
-const CreatePixChargeSchema = z.object({
+// Input validation schema for static Pix generation
+const GenerateStaticPixSchema = z.object({
+  pixKey: z.string().min(1).max(77),
   amount: z.number().positive().max(999999.99),
-  recipientName: z.string().min(1).max(100),
-  description: z.string().optional().default('Pix payment'),
+  recipientName: z.string().min(1).max(25),
+  recipientCity: z.string().min(1).max(15),
+  description: z.string().optional().default(''),
 });
 
 class PixMCPServer {
   private server: Server;
-  private pixService: PixService;
+  private staticPixService: StaticPixService;
+  private httpServer: http.Server | null = null;
 
   constructor() {
-    // Validate environment before initializing
-    validateEnvironment();
-    
+    // Initialize MCP server
     this.server = new Server(
       {
         name: 'pix-mcp-server',
         version: '1.0.0',
+        description: 'Pix MCP Server for generating static Pix QR codes',
       },
       {
         capabilities: {
@@ -54,14 +40,8 @@ class PixMCPServer {
       }
     );
 
-    // Initialize Pix service with Efí provider
-    const efiProvider = new EfiProvider({
-      clientId: process.env.EFI_CLIENT_ID!,
-      clientSecret: process.env.EFI_CLIENT_SECRET!,
-      sandbox: process.env.EFI_SANDBOX === 'true',
-    });
-
-    this.pixService = new PixService([efiProvider]);
+    // Initialize services
+    this.staticPixService = new StaticPixService();
     this.setupHandlers();
   }
 
@@ -71,11 +51,17 @@ class PixMCPServer {
       return {
         tools: [
           {
-            name: 'createPixCharge',
-            description: 'Create a new Pix payment charge with QR code',
+            name: 'generateStaticPix',
+            description: 'Generate a static Pix QR code for any Pix key (works without API credentials)',
             inputSchema: {
               type: 'object',
               properties: {
+                pixKey: {
+                  type: 'string',
+                  description: 'Pix key (email, phone +5511999999999, CPF, CNPJ, or random key)',
+                  minLength: 1,
+                  maxLength: 77,
+                },
                 amount: {
                   type: 'number',
                   description: 'Payment amount in BRL (Brazilian Reais)',
@@ -84,17 +70,23 @@ class PixMCPServer {
                 },
                 recipientName: {
                   type: 'string',
-                  description: 'Name of the payment recipient',
+                  description: 'Name of the payment recipient (max 25 chars)',
                   minLength: 1,
-                  maxLength: 100,
+                  maxLength: 25,
+                },
+                recipientCity: {
+                  type: 'string',
+                  description: 'City of the payment recipient',
+                  minLength: 1,
+                  maxLength: 15,
                 },
                 description: {
                   type: 'string',
                   description: 'Optional payment description',
-                  maxLength: 200,
+                  maxLength: 25,
                 },
               },
-              required: ['amount', 'recipientName'],
+              required: ['pixKey', 'amount', 'recipientName', 'recipientCity'],
             },
           } satisfies Tool,
           {
@@ -116,13 +108,6 @@ class PixMCPServer {
 
       try {
         switch (name) {
-          case 'createPixCharge': {
-            const validatedArgs = CreatePixChargeSchema.parse(args);
-            const result = await this.pixService.createPixCharge(validatedArgs);
-            
-            return {
-              content: [
-                {
                   type: 'text',
                   text: `✅ Pix charge created successfully!
 
@@ -141,6 +126,39 @@ ${result.qrCodeDataUrl ? `![QR Code](${result.qrCodeDataUrl})` : 'QR Code genera
 
 The recipient can scan the QR code or copy the Pix code to complete the payment.`,
                 },
+              ],
+            };
+          }
+
+          case 'generateStaticPix': {
+            const validatedArgs = GenerateStaticPixSchema.parse(args);
+            const result = await this.staticPixService.createStaticPix(validatedArgs);
+            
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: `✅ ${result.message}
+
+**Payment Details:**
+- Pix Key: ${result.paymentDetails.pixKey}
+- Amount: ${result.paymentDetails.amountFormatted}
+- Recipient: ${result.paymentDetails.recipient}
+- City: ${result.paymentDetails.city}
+- Description: ${result.paymentDetails.description || 'N/A'}
+
+**Pix Code (copy and paste):**
+\`${result.pixCode}\`
+
+**QR Code:**
+${result.qrCodeDataUrl ? `![QR Code](${result.qrCodeDataUrl})` : 'QR Code generation failed'}
+
+⚠️ **Note**: This is a static Pix code. Payment confirmation must be checked manually by the recipient.`,
+                },
+                {
+                  type: 'text',
+                  text: JSON.stringify(result, null, 2)
+                }
               ],
             };
           }
@@ -247,6 +265,45 @@ The recipient can scan the QR code or copy the Pix code to complete the payment.
               },
             },
             {
+              name: 'generateStaticPix',
+              description: 'Generate a static Pix QR code for any Pix key (works without API credentials)',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  pixKey: {
+                    type: 'string',
+                    description: 'Pix key (email, phone +5511999999999, CPF, CNPJ, or random key)',
+                    minLength: 1,
+                    maxLength: 77,
+                  },
+                  amount: {
+                    type: 'number',
+                    description: 'Payment amount in BRL (Brazilian Reais)',
+                    minimum: 0.01,
+                    maximum: 999999.99,
+                  },
+                  recipientName: {
+                    type: 'string',
+                    description: 'Name of the payment recipient',
+                    minLength: 1,
+                    maxLength: 25,
+                  },
+                  recipientCity: {
+                    type: 'string',
+                    description: 'City of the payment recipient',
+                    minLength: 1,
+                    maxLength: 15,
+                  },
+                  description: {
+                    type: 'string',
+                    description: 'Optional payment description',
+                    maxLength: 25,
+                  },
+                },
+                required: ['pixKey', 'amount', 'recipientName', 'recipientCity'],
+              },
+            },
+            {
               name: 'healthCheck',
               description: 'Check the health status of the Pix MCP server and providers',
               inputSchema: {
@@ -293,6 +350,37 @@ The recipient can scan the QR code or copy the Pix code to complete the payment.
 ${result.qrCodeDataUrl ? `![QR Code](${result.qrCodeDataUrl})` : 'QR Code generation failed'}
 
 The recipient can scan the QR code or copy the Pix code to complete the payment.`,
+                }],
+              };
+              
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify(response));
+            } else if (name === 'generateStaticPix') {
+              const validatedArgs = GenerateStaticPixSchema.parse(args);
+              const result = await this.staticPixService.createStaticPix(validatedArgs);
+              
+              const response = {
+                content: [{
+                  type: 'text',
+                  text: `✅ ${result.message}
+
+**Payment Details:**
+- Pix Key: ${result.paymentDetails.pixKey}
+- Amount: ${result.paymentDetails.amountFormatted}
+- Recipient: ${result.paymentDetails.recipient}
+- City: ${result.paymentDetails.city}
+- Description: ${result.paymentDetails.description || 'N/A'}
+
+**Pix Code (copy and paste):**
+\`${result.pixCode}\`
+
+**QR Code:**
+${result.qrCodeDataUrl ? `![QR Code](${result.qrCodeDataUrl})` : 'QR Code generation failed'}
+
+⚠️ **Note**: This is a static Pix code. Payment confirmation must be checked manually by the recipient.`,
+                }, {
+                  type: 'text',
+                  text: JSON.stringify(result, null, 2)
                 }],
               };
               

@@ -20,51 +20,26 @@ export interface PixProvider {
   createPixCharge(request: PixChargeRequest): Promise<PixChargeResponse>;
 }
 
-// Efí specific types
-export interface EfiConfig {
-  clientId: string;
-  clientSecret: string;
-  sandbox: boolean;
+// Static Pix specific interfaces
+export interface StaticPixRequest {
+  pixKey: string;
+  amount: number;
+  recipientName: string;
+  recipientCity: string;
+  description?: string;
 }
 
-export interface EfiTokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
-
-export interface EfiPixChargeRequest {
-  calendario: {
-    expiracao: number;
+export interface StaticPixResponse {
+  success: boolean;
+  message: string;
+  paymentDetails: {
+    pixKey: string;
+    amount: number;
+    amountFormatted: string;
+    recipient: string;
+    city: string;
+    description: string;
   };
-  devedor?: {
-    nome: string;
-  };
-  valor: {
-    original: string;
-  };
-  chave: string;
-  solicitacaoPagador?: string;
-}
-
-export interface EfiPixChargeResponse {
-  txid: string;
-  revisao: number;
-  loc: {
-    id: number;
-    location: string;
-    tipoCob: string;
-    criacao: string;
-  };
-  location: string;
-  status: string;
-  devedor?: {
-    nome: string;
-  };
-  valor: {
-    original: string;
-  };
-  chave: string;
-  solicitacaoPagador?: string;
-  pixCopiaECola: string;
+  pixCode: string;
+  qrCodeDataUrl?: string;
 }

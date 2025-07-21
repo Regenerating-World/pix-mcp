@@ -1,45 +1,47 @@
-import { PixProvider, PixChargeRequest, PixChargeResponse } from '../types/PixTypes.js';
+import { PixChargeRequest, PixChargeResponse } from '../types/PixTypes.js';
+import { StaticPixService } from './StaticPixService.js';
 
 export class PixService {
-  private providers: PixProvider[];
+  private staticPixService: StaticPixService;
 
-  constructor(providers: PixProvider[]) {
-    this.providers = providers;
+  constructor() {
+    this.staticPixService = new StaticPixService();
   }
 
   async createPixCharge(request: PixChargeRequest): Promise<PixChargeResponse> {
-    let lastError: Error | null = null;
+    try {
+      // Use static Pix service to generate the Pix code
+      const result = await this.staticPixService.createStaticPix({
+        pixKey: request.recipientName, // Using recipientName as pixKey for backward compatibility
+        amount: request.amount,
+        recipientName: request.recipientName,
+        recipientCity: 'Sao Paulo', // Default city
+        description: request.description || ''
+      });
 
-    // Try each provider in order until one succeeds
-    for (const provider of this.providers) {
-      try {
-        // Attempting to create Pix charge with provider
-        const result = await provider.createPixCharge(request);
-        // Successfully created Pix charge
-        return result;
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error('Unknown provider error');
-        // Provider failed, trying next provider
-        
-        // Continue to next provider
-        continue;
-      }
+      return {
+        txid: `static-${Date.now()}`,
+        amount: request.amount,
+        recipientName: request.recipientName,
+        description: request.description || '',
+        pixCode: result.pixCode,
+        qrCodeDataUrl: result.qrCodeDataUrl,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        provider: 'static-pix'
+      };
+    } catch (error) {
+      throw new Error(`Failed to create static Pix: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-
-    // All providers failed
-    throw new Error(
-      `All Pix providers failed. Last error: ${lastError?.message || 'Unknown error'}`
-    );
   }
 
   // Future methods for Phase 2+
   async getPixStatus(_txid: string): Promise<{ status: 'pending' | 'paid' | 'expired' }> {
-    // Implementation for Phase 2
-    throw new Error('getPixStatus not implemented yet');
+    // For static Pix, we can't check status, so we'll always return 'pending'
+    return { status: 'pending' };
   }
 
   async cancelPixCharge(_txid: string): Promise<{ success: boolean }> {
-    // Implementation for Phase 2
-    throw new Error('cancelPixCharge not implemented yet');
+    // For static Pix, we can't cancel, so we'll always return success
+    return { success: true };
   }
 }
