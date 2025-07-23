@@ -35,20 +35,20 @@ export class StaticPixService {
    */
   private calculateCRC16(payload: string): string {
     const polynomial = 0x1021;
-    let crc = 0xFFFF;
-    
+    let crc = 0xffff;
+
     for (let i = 0; i < payload.length; i++) {
-      crc ^= (payload.charCodeAt(i) << 8);
+      crc ^= payload.charCodeAt(i) << 8;
       for (let j = 0; j < 8; j++) {
         if (crc & 0x8000) {
           crc = (crc << 1) ^ polynomial;
         } else {
           crc = crc << 1;
         }
-        crc &= 0xFFFF;
+        crc &= 0xffff;
       }
     }
-    
+
     return crc.toString(16).toUpperCase().padStart(4, '0');
   }
 
@@ -68,34 +68,52 @@ export class StaticPixService {
     if (pixKey.includes('@') && pixKey.includes('.')) {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(pixKey);
     }
-    
+
     // Phone format (+5511999999999)
     if (pixKey.startsWith('+55')) {
       return /^\+55\d{10,11}$/.test(pixKey);
     }
-    
+
     // CPF format (11 digits)
     if (/^\d{11}$/.test(pixKey)) {
       return true;
     }
-    
+
     // CNPJ format (14 digits)
     if (/^\d{14}$/.test(pixKey)) {
       return true;
     }
-    
+
     // Random key (UUID format)
     if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pixKey)) {
       return true;
     }
-    
+
     return false;
+  }
+
+  /**
+   * Removes accents and special characters from text
+   */
+  private removeAccents(text: string): string {
+    return text
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\w\s]/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   /**
    * Generates static Pix payload according to BACEN EMV 4.0 standard
    */
-  private generatePixPayload({ pixKey, amount, recipientName, recipientCity, description }: StaticPixRequest): string {
+  private generatePixPayload({
+    pixKey,
+    amount,
+    recipientName,
+    recipientCity,
+    description,
+  }: StaticPixRequest): string {
     // Validate inputs
     if (!this.validatePixKey(pixKey)) {
       throw new Error('Invalid Pix key format');
@@ -105,9 +123,11 @@ export class StaticPixService {
       throw new Error('Amount must be between 0.01 and 999,999.99');
     }
 
-    // Truncate names if they exceed limits
-    const truncatedRecipientName = recipientName.substring(0, 25);
-    const truncatedRecipientCity = recipientCity.substring(0, 15);
+    // Remove accents and truncate names if they exceed limits
+    const cleanRecipientName = this.removeAccents(recipientName);
+    const cleanRecipientCity = this.removeAccents(recipientCity);
+    const truncatedRecipientName = cleanRecipientName.substring(0, 25);
+    const truncatedRecipientCity = cleanRecipientCity.substring(0, 15);
 
     // Build EMV payload
     let payload = '';
@@ -119,9 +139,8 @@ export class StaticPixService {
     payload += this.formatEMVField('01', '12');
 
     // Merchant Account Information (26)
-    const merchantInfo = 
-      this.formatEMVField('00', 'BR.GOV.BCB.PIX') +
-      this.formatEMVField('01', pixKey);
+    const merchantInfo =
+      this.formatEMVField('00', 'BR.GOV.BCB.PIX') + this.formatEMVField('01', pixKey);
     payload += this.formatEMVField('26', merchantInfo);
 
     // Merchant Category Code (52) - Generic
@@ -144,7 +163,8 @@ export class StaticPixService {
 
     // Additional Data Field Template (62)
     if (description) {
-      const additionalData = this.formatEMVField('05', description.substring(0, 25));
+      const cleanDescription = this.removeAccents(description);
+      const additionalData = this.formatEMVField('05', cleanDescription.substring(0, 25));
       payload += this.formatEMVField('62', additionalData);
     }
 
@@ -166,14 +186,16 @@ export class StaticPixService {
         margin: 1,
         color: {
           dark: '#000000',
-          light: '#FFFFFF'
+          light: '#FFFFFF',
         },
-        width: 256
+        width: 256,
       });
-      
+
       return qrCodeDataUrl;
     } catch (error) {
-      throw new Error(`Failed to generate QR code: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to generate QR code: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -184,14 +206,16 @@ export class StaticPixService {
     try {
       // Generate Pix payload
       const pixCode = this.generatePixPayload(request);
-      
+
       // Generate QR Code
       const qrCodeDataUrl = await this.generateQRCode(pixCode);
 
-      // Apply same truncation as in payload generation
-      const truncatedRecipientName = request.recipientName.substring(0, 25);
-      const truncatedRecipientCity = request.recipientCity.substring(0, 15);
-      
+      // Apply same cleaning and truncation as in payload generation
+      const cleanRecipientName = this.removeAccents(request.recipientName);
+      const cleanRecipientCity = this.removeAccents(request.recipientCity);
+      const truncatedRecipientName = cleanRecipientName.substring(0, 25);
+      const truncatedRecipientCity = cleanRecipientCity.substring(0, 15);
+
       return {
         success: true,
         message: 'Static Pix QR code generated successfully!',
@@ -201,13 +225,15 @@ export class StaticPixService {
           amountFormatted: `R$ ${request.amount.toFixed(2)}`,
           recipient: truncatedRecipientName,
           city: truncatedRecipientCity,
-          description: request.description || ''
+          description: request.description ? this.removeAccents(request.description) : '',
         },
         pixCode,
-        qrCodeDataUrl
+        qrCodeDataUrl,
       };
     } catch (error) {
-      throw new Error(`Failed to create static Pix: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to create static Pix: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 }
