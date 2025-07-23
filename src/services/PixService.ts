@@ -1,4 +1,9 @@
-import { PixChargeRequest, PixChargeResponse, StaticPixRequest, StaticPixResponse } from '../types/PixTypes.js';
+import {
+  PixChargeRequest,
+  PixChargeResponse,
+  StaticPixRequest,
+  StaticPixResponse,
+} from '../types/PixTypes.js';
 import { StaticPixService } from './StaticPixService.js';
 
 export class PixService {
@@ -27,21 +32,21 @@ export class PixService {
         amount: request.amount,
         recipientName: request.recipientName,
         recipientCity: request.recipientCity,
-        description: request.description || ''
       });
 
       return {
         txid: `static-${Date.now()}`,
         amount: result.paymentDetails.amount,
         recipientName: result.paymentDetails.recipient,
-        description: result.paymentDetails.description,
         pixCode: result.pixCode,
         qrCodeDataUrl: result.qrCodeDataUrl,
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-        provider: 'static-pix'
+        provider: 'static-pix',
       };
     } catch (error) {
-      throw new Error(`Failed to create static Pix: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to create static Pix: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 

@@ -6,28 +6,7 @@
 
 import QRCode from 'qrcode';
 
-export interface StaticPixRequest {
-  pixKey: string;
-  amount: number;
-  recipientName: string;
-  recipientCity: string;
-  description?: string;
-}
-
-export interface StaticPixResponse {
-  success: boolean;
-  message: string;
-  paymentDetails: {
-    pixKey: string;
-    amount: number;
-    amountFormatted: string;
-    recipient: string;
-    city: string;
-    description: string;
-  };
-  pixCode: string;
-  qrCodeDataUrl: string;
-}
+import { StaticPixRequest, StaticPixResponse } from '../types/PixTypes.js';
 
 export class StaticPixService {
   /**
@@ -119,7 +98,6 @@ export class StaticPixService {
     amount,
     recipientName,
     recipientCity,
-    description,
   }: StaticPixRequest): string {
     // Validate inputs
     if (!this.validatePixKey(pixKey)) {
@@ -168,12 +146,7 @@ export class StaticPixService {
     // Merchant City (60)
     payload += this.formatEMVField('60', truncatedRecipientCity);
 
-    // Additional Data Field Template (62)
-    if (description) {
-      const cleanDescription = this.removeAccents(description);
-      const additionalData = this.formatEMVField('05', cleanDescription.substring(0, 25));
-      payload += this.formatEMVField('62', additionalData);
-    }
+    // Additional Data Field Template (62) - Removed for compatibility
 
     // CRC16 (63) - Calculate and append
     const payloadWithoutCRC = payload + '6304';
@@ -232,7 +205,6 @@ export class StaticPixService {
           amountFormatted: `R$ ${request.amount.toFixed(2)}`,
           recipient: truncatedRecipientName,
           city: truncatedRecipientCity,
-          description: request.description ? this.removeAccents(request.description) : '',
         },
         pixCode,
         qrCodeDataUrl,

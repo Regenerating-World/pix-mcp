@@ -55,8 +55,7 @@ curl -X POST http://localhost:3000/tools/call \
       "pixKey": "10891990909",
       "amount": 100.50,
       "recipientName": "Franco Camelo Aguzzi",
-      "recipientCity": "Florianopolis",
-      "description": "Payment for services"
+      "recipientCity": "Florianopolis"
     }
   }'
 ```
@@ -69,7 +68,6 @@ const result = await mcpClient.callTool('generateStaticPix', {
   amount: 100.5,
   recipientName: 'Franco Camelo Aguzzi',
   recipientCity: 'Florianopolis',
-  description: 'Payment for services',
 });
 ```
 
@@ -150,11 +148,10 @@ Creates a static Pix payment QR code following BACEN EMV 4.0 standards.
 - `amount` (number): Payment amount in BRL (0.01 to 999,999.99)
 - `recipientName` (string): Name of the payment recipient (max 25 chars)
 - `recipientCity` (string): City of the payment recipient (max 15 chars)
-- `description` (string, optional): Payment description (max 25 chars)
 
 **Returns:**
 
-- Payment details (amount, recipient, city, description)
+- Payment details (amount, recipient, city)
 - Pix copy-paste code (EMV format)
 - QR code image (base64 data URL)
 - Success status and message
@@ -197,17 +194,11 @@ npm run format
 - [x] EMV 4.0 compliance
 - [x] CRC16-CCITT validation
 - [x] All Pix key types support
+- [x] Public deployment
 
 ### Phase 2: MCP Discovery
 
 - [ ] Register with MCP registry
-- [ ] Public deployment
-
-### Phase 3: Tool Expansion
-
-- [ ] Dynamic Pix codes (with expiration)
-- [ ] Payment status checking
-- [ ] Webhook support for payment notifications
 
 ## 🔒 Security & Validation
 

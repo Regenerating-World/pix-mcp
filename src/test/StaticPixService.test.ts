@@ -14,7 +14,6 @@ describe('StaticPixService', () => {
         amount: 10.5,
         recipientName: 'João Silva',
         recipientCity: 'São Paulo',
-        description: 'Test payment',
       };
 
       const result = await service.createStaticPix(request);
@@ -27,7 +26,6 @@ describe('StaticPixService', () => {
       expect(result.paymentDetails).toHaveProperty('amountFormatted', 'R$ 10.50');
       expect(result.paymentDetails).toHaveProperty('recipient', 'Joao Silva'); // Accents removed
       expect(result.paymentDetails).toHaveProperty('city', 'Sao Paulo'); // Accents removed
-      expect(result.paymentDetails).toHaveProperty('description', request.description);
       expect(result).toHaveProperty('pixCode');
       expect(result).toHaveProperty('qrCodeDataUrl');
 
@@ -37,26 +35,6 @@ describe('StaticPixService', () => {
 
       // Verify QR code is a data URL
       expect(result.qrCodeDataUrl).toMatch(/^data:image\/png;base64,/);
-    });
-
-    it('should create a static Pix QR code without description', async () => {
-      const request = {
-        pixKey: '+5511999999999',
-        amount: 25.0,
-        recipientName: 'Maria Santos',
-        recipientCity: 'Rio de Janeiro',
-      };
-
-      const result = await service.createStaticPix(request);
-
-      expect(result).toHaveProperty('success', true);
-      expect(result.paymentDetails).toHaveProperty('pixKey', request.pixKey);
-      expect(result.paymentDetails).toHaveProperty('amount', request.amount);
-      expect(result.paymentDetails).toHaveProperty('recipient', request.recipientName);
-      expect(result.paymentDetails).toHaveProperty('city', request.recipientCity);
-      expect(result.paymentDetails).toHaveProperty('description', '');
-      expect(result).toHaveProperty('pixCode');
-      expect(result).toHaveProperty('qrCodeDataUrl');
     });
 
     it('should handle CPF as Pix key', async () => {
@@ -71,6 +49,7 @@ describe('StaticPixService', () => {
 
       expect(result.paymentDetails).toHaveProperty('pixKey', request.pixKey);
       expect(result.pixCode).toContain(request.pixKey);
+      expect(result.paymentDetails.city).toBe('Brasilia'); // Accents removed
     });
 
     it('should handle CNPJ as Pix key', async () => {
@@ -131,52 +110,54 @@ describe('StaticPixService', () => {
       expect(result.paymentDetails.city).toBe('Very Long City ');
     });
 
-    it('should preserve spaces in description (BACEN BR Code v2.0.0+ compliance)', async () => {
-      const request = {
-        pixKey: 'test@example.com',
-        amount: 10.5,
-        recipientName: 'João Silva',
-        recipientCity: 'São Paulo',
-        description: 'Pagamento via API',
-      };
-
-      const result = await service.createStaticPix(request);
-
-      expect(result.paymentDetails.description).toBe('Pagamento via API');
-      expect(result.pixCode).toContain('Pagamento via API');
-    });
-
-    it('should remove accents but preserve spaces and basic punctuation', async () => {
+    it('should remove accents from names and cities', async () => {
       const request = {
         pixKey: 'test@example.com',
         amount: 15.75,
         recipientName: 'José Maria',
         recipientCity: 'Brasília',
-        description: 'Café & açúcar - R$ 15,50',
       };
 
       const result = await service.createStaticPix(request);
 
-      // Should remove accents but keep spaces, hyphens, commas
-      // Note: & and $ are removed as they're not in the allowed character set
-      expect(result.paymentDetails.description).toBe('Cafe acucar - R 15,50');
       expect(result.paymentDetails.recipient).toBe('Jose Maria');
       expect(result.paymentDetails.city).toBe('Brasilia');
     });
 
-    it('should handle multi-word descriptions correctly', async () => {
+    it('should handle phone number as Pix key', async () => {
       const request = {
-        pixKey: 'test@example.com',
-        amount: 50.0,
-        recipientName: 'Ana Costa',
+        pixKey: '+5511999999999',
+        amount: 25.0,
+        recipientName: 'Maria Santos',
         recipientCity: 'Rio de Janeiro',
-        description: 'Taxa de serviço mensal',
       };
 
       const result = await service.createStaticPix(request);
 
-      expect(result.paymentDetails.description).toBe('Taxa de servico mensal');
-      expect(result.paymentDetails.description).toContain(' '); // Verify spaces are preserved
+      expect(result).toHaveProperty('success', true);
+      expect(result.paymentDetails).toHaveProperty('pixKey', request.pixKey);
+      expect(result.paymentDetails).toHaveProperty('amount', request.amount);
+      expect(result.paymentDetails).toHaveProperty('recipient', request.recipientName);
+      expect(result.paymentDetails).toHaveProperty('city', request.recipientCity);
+      expect(result).toHaveProperty('pixCode');
+      expect(result).toHaveProperty('qrCodeDataUrl');
+    });
+
+    it('should not include field 62 (Additional Data) in PIX code when no description', async () => {
+      const request = {
+        pixKey: 'test@example.com',
+        amount: 50.0,
+        recipientName: 'Ana Costa',
+        recipientCity: 'Florianopolis',
+      };
+
+      const result = await service.createStaticPix(request);
+
+      // PIX code should not contain field 62 (Additional Data)
+      expect(result.pixCode).not.toMatch(/62\d{2}/);
+
+      // Should go directly from field 60 (city) to field 63 (CRC)
+      expect(result.pixCode).toMatch(/60\d{2}.*6304[A-F0-9]{4}$/);
     });
   });
 });

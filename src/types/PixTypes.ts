@@ -3,14 +3,12 @@ export interface PixChargeRequest {
   pixKey: string;
   recipientName: string;
   recipientCity: string;
-  description?: string;
 }
 
 export interface PixChargeResponse {
   txid: string;
   amount: number;
   recipientName: string;
-  description: string;
   pixCode: string;
   qrCodeDataUrl?: string;
   expiresAt: Date;
@@ -28,7 +26,6 @@ export interface StaticPixRequest {
   amount: number;
   recipientName: string;
   recipientCity: string;
-  description?: string;
 }
 
 export interface StaticPixResponse {
@@ -40,7 +37,6 @@ export interface StaticPixResponse {
     amountFormatted: string;
     recipient: string;
     city: string;
-    description: string;
   };
   pixCode: string;
   qrCodeDataUrl?: string;
