@@ -93,14 +93,14 @@ export class StaticPixService {
   }
 
   /**
-   * Removes accents and special characters from text
+   * Removes accents and normalizes text for PIX compatibility
    */
   private removeAccents(text: string): string {
     return text
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^\w\s]/gi, ' ')
-      .replace(/\s+/g, ' ')
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritical marks
+      .replace(/[^\w\s\-.,]/gi, '') // Keep only word chars, spaces, and basic punctuation
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
       .trim();
   }
 
