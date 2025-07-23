@@ -46,10 +46,10 @@ pix-mcp-server --http --http-port 3000
 curl -X POST http://localhost:3000/generate-static-pix \
   -H "Content-Type: application/json" \
   -d '{
-    "pixKey": "12345678900",
+    "pixKey": "10891990909",
     "amount": 100.50,
-    "recipientName": "John Doe",
-    "recipientCity": "Sao Paulo",
+    "recipientName": "Franco Camelo Aguzzi",
+    "recipientCity": "Florianopolis",
     "description": "Payment for services"
   }'
 ```
@@ -58,10 +58,10 @@ curl -X POST http://localhost:3000/generate-static-pix \
 
 ```typescript
 const result = await mcpClient.callTool('generateStaticPix', {
-  pixKey: '12345678900',
-  amount: 100.5,
-  recipientName: 'John Doe',
-  recipientCity: 'Sao Paulo',
+  pixKey: "10891990909",
+  amount: 100.50,
+  recipientName: "Franco Camelo Aguzzi",
+  recipientCity": "Florianopolis",
   description: 'Payment for services',
 });
 ```
@@ -150,16 +150,6 @@ Creates a new Pix payment charge with QR code.
 - QR code image (base64 data URL)
 - Expiration timestamp
 - Payment details
-
-**Example:**
-
-```typescript
-{
-  "amount": 25.50,
-  "recipientName": "Maria Silva",
-  "description": "Lunch payment"
-}
-```
 
 ## 🏗️ Development
 
