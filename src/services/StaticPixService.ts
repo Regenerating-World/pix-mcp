@@ -94,6 +94,13 @@ export class StaticPixService {
 
   /**
    * Removes accents and normalizes text for PIX compatibility
+   *
+   * Complies with BACEN BR Code Manual v2.0.0+ (May 2020):
+   * - Spaces are officially allowed in field 62.05 (Additional Data - Reference Label)
+   * - Removes diacritical marks (ã, ç, é, etc.) for maximum compatibility
+   * - Preserves spaces, hyphens, periods, and commas
+   * - Reference: "The restriction that established that only alphanumeric characters
+   *   could be used has been removed" - BACEN BR Code Manual v2.0.0
    */
   private removeAccents(text: string): string {
     return text
