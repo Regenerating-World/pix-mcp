@@ -11,7 +11,6 @@
     "dist/**/*",
     "README.md",
     "LICENSE",
-    "mcp_config.example.json",
     ".env.example"
   ],
   "scripts": {
