@@ -178,7 +178,7 @@ export class StaticPixService {
     // CRC16 (63) - Calculate and append
     const payloadWithoutCRC = payload + '6304';
     const crc = this.calculateCRC16(payloadWithoutCRC);
-    payload += this.formatEMVField('63', crc);
+    payload += '6304' + crc;
 
     return payload;
   }
