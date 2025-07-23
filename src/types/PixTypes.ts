@@ -1,6 +1,8 @@
 export interface PixChargeRequest {
   amount: number;
+  pixKey: string;
   recipientName: string;
+  recipientCity: string;
   description?: string;
 }
 

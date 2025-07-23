@@ -59,10 +59,10 @@ curl -X POST http://localhost:3000/generate-static-pix \
 ```typescript
 const result = await mcpClient.callTool('generateStaticPix', {
   pixKey: '12345678900',
-  amount: 100.50,
+  amount: 100.5,
   recipientName: 'John Doe',
   recipientCity: 'Sao Paulo',
-  description: 'Payment for services'
+  description: 'Payment for services',
 });
 ```
 
@@ -86,7 +86,7 @@ npm install
 npm run build
 
 # Start the server
-NODE_ENV=production node dist/index.js --http --http-port $PORT
+NODE_ENV=production node dist/index.js --http --http-port 3000
 ```
 
 ## 📝 License
@@ -97,17 +97,7 @@ MIT
 
 ### Environment Variables
 
-- `EFI_CLIENT_ID`: Your Efí (Gerencianet) client ID
-- `EFI_CLIENT_SECRET`: Your Efí client secret
-- `EFI_SANDBOX`: Set to `true` for sandbox mode, `false` for production
-- `EFI_PIX_KEY`: Your Pix key (email, phone, CPF, or random key)
-
-### Getting Efí Credentials
-
-1. Create an account at [Efí (Gerencianet)](https://sejaefi.com.br/)
-2. Access the developer dashboard
-3. Create a new application to get your client ID and secret
-4. Configure your Pix key in the Efí dashboard
+- `NODE_ENV`: (Optional) Environment (development/production)
 
 ## 🤖 Usage with Claude Desktop
 
@@ -121,9 +111,7 @@ MIT
       "command": "node",
       "args": ["/path/to/pix-mcp-server/dist/index.js"],
       "env": {
-        "EFI_CLIENT_ID": "your_client_id",
-        "EFI_CLIENT_SECRET": "your_client_secret",
-        "EFI_SANDBOX": "true"
+        # No external API keys needed for static Pix generation
       }
     }
   }
@@ -131,6 +119,7 @@ MIT
 ```
 
 Then in Claude:
+
 ```
 Create a Pix charge for R$25.50 to Maria Silva for lunch
 ```
@@ -149,11 +138,13 @@ Create a Pix charge for R$15 to João for coffee
 Creates a new Pix payment charge with QR code.
 
 **Parameters:**
+
 - `amount` (number): Payment amount in BRL (0.01 to 999,999.99)
 - `recipientName` (string): Name of the payment recipient (1-100 chars)
 - `description` (string, optional): Payment description (max 200 chars)
 
 **Returns:**
+
 - Transaction ID (txid)
 - Pix copy-paste code
 - QR code image (base64 data URL)
@@ -161,6 +152,7 @@ Creates a new Pix payment charge with QR code.
 - Payment details
 
 **Example:**
+
 ```typescript
 {
   "amount": 25.50,
@@ -188,23 +180,19 @@ npm run format
 ## 🗺️ Roadmap
 
 ### Phase 1: MVP ✅
+
 - [x] `createPixCharge` tool
-- [x] Efí provider integration
+- [x] Static Pix QR code generation
 - [x] QR code generation
 - [x] Claude Desktop compatibility
 
-### Phase 2: Stability (In Progress)
-- [ ] Cielo provider integration
-- [ ] Adyen provider integration
-- [ ] Automatic fallback logic
-- [ ] Enhanced logging and monitoring
+### Phase 2: MCP Discovery
 
-### Phase 3: MCP Discovery
 - [ ] Register with MCP registry
 - [ ] Public deployment at pixmcp.com
-- [ ] Documentation and examples
 
 ### Phase 4: Tool Expansion
+
 - [ ] `getPixStatus` tool
 - [ ] `cancelPixCharge` tool
 - [ ] Webhook listener for payment confirmation

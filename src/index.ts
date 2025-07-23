@@ -2,6 +2,7 @@
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import type { Tool } from '@modelcontextprotocol/sdk/types.js';
 import http from 'http';
 import { URL } from 'url';
 import {
@@ -108,28 +109,6 @@ class PixMCPServer {
 
       try {
         switch (name) {
-                  type: 'text',
-                  text: `✅ Pix charge created successfully!
-
-**Payment Details:**
-- Amount: R$ ${result.amount.toFixed(2)}
-- Recipient: ${result.recipientName}
-- Description: ${result.description}
-- Transaction ID: ${result.txid}
-- Expires: ${result.expiresAt.toLocaleString('pt-BR')}
-
-**Pix Code (copy and paste):**
-\`${result.pixCode}\`
-
-**QR Code:**
-${result.qrCodeDataUrl ? `![QR Code](${result.qrCodeDataUrl})` : 'QR Code generation failed'}
-
-The recipient can scan the QR code or copy the Pix code to complete the payment.`,
-                },
-              ],
-            };
-          }
-
           case 'generateStaticPix': {
             const validatedArgs = GenerateStaticPixSchema.parse(args);
             const result = await this.staticPixService.createStaticPix(validatedArgs);
@@ -138,14 +117,14 @@ The recipient can scan the QR code or copy the Pix code to complete the payment.
               content: [
                 {
                   type: 'text',
-                  text: `✅ ${result.message}
+                  text: `✅ Pix charge created successfully!
 
 **Payment Details:**
-- Pix Key: ${result.paymentDetails.pixKey}
-- Amount: ${result.paymentDetails.amountFormatted}
+- Amount: R$ ${result.paymentDetails.amountFormatted}
 - Recipient: ${result.paymentDetails.recipient}
-- City: ${result.paymentDetails.city}
 - Description: ${result.paymentDetails.description || 'N/A'}
+- PIX Key: ${result.paymentDetails.pixKey}
+- City: ${result.paymentDetails.city}
 
 **Pix Code (copy and paste):**
 \`${result.pixCode}\`
@@ -153,13 +132,9 @@ The recipient can scan the QR code or copy the Pix code to complete the payment.
 **QR Code:**
 ${result.qrCodeDataUrl ? `![QR Code](${result.qrCodeDataUrl})` : 'QR Code generation failed'}
 
-⚠️ **Note**: This is a static Pix code. Payment confirmation must be checked manually by the recipient.`,
-                },
-                {
-                  type: 'text',
-                  text: JSON.stringify(result, null, 2)
+⚠️ **Note**: This is a static Pix code. Payment confirmation must be checked manually by the recipient.`
                 }
-              ],
+              ]
             };
           }
 
@@ -167,26 +142,19 @@ ${result.qrCodeDataUrl ? `![QR Code](${result.qrCodeDataUrl})` : 'QR Code genera
             const status = {
               server: 'healthy',
               timestamp: new Date().toISOString(),
-              environment: process.env.EFI_SANDBOX === 'true' ? 'sandbox' : 'production',
-              providers: ['Efí (Gerencianet)'],
-              version: '1.0.0'
+              version: '2.0.0',
+              mode: 'static-pix',
+              status: 'operational'
             };
             
             return {
               content: [
                 {
                   type: 'text',
-                  text: `🟢 **Pix MCP Server Health Check**
-
-**Status:** ${status.server}
-**Version:** ${status.version}
-**Environment:** ${status.environment}
-**Providers:** ${status.providers.join(', ')}
-**Timestamp:** ${status.timestamp}
-
-✅ All systems operational`,
-                },
+                  text: `✅ Server is healthy\nVersion: ${status.version}\nMode: ${status.mode}\nStatus: ${status.status}`
+                }
               ],
+              status
             };
           }
 
@@ -327,45 +295,16 @@ ${result.qrCodeDataUrl ? `![QR Code](${result.qrCodeDataUrl})` : 'QR Code genera
             const { name, arguments: args } = JSON.parse(body);
             
             // Handle tool calls directly
-            if (name === 'createPixCharge') {
-              const validatedArgs = CreatePixChargeSchema.parse(args);
-              const result = await this.pixService.createPixCharge(validatedArgs);
-              
-              const response = {
-                content: [{
-                  type: 'text',
-                  text: `✅ Pix charge created successfully!
-
-**Payment Details:**
-- Amount: R$ ${result.amount.toFixed(2)}
-- Recipient: ${result.recipientName}
-- Description: ${result.description}
-- Transaction ID: ${result.txid}
-- Expires: ${result.expiresAt.toLocaleString('pt-BR')}
-
-**Pix Code (copy and paste):**
-\`${result.pixCode}\`
-
-**QR Code:**
-${result.qrCodeDataUrl ? `![QR Code](${result.qrCodeDataUrl})` : 'QR Code generation failed'}
-
-The recipient can scan the QR code or copy the Pix code to complete the payment.`,
-                }],
-              };
-              
-              res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify(response));
-            } else if (name === 'generateStaticPix') {
+            if (name === 'generateStaticPix') {
               const validatedArgs = GenerateStaticPixSchema.parse(args);
               const result = await this.staticPixService.createStaticPix(validatedArgs);
               
               const response = {
                 content: [{
                   type: 'text',
-                  text: `✅ ${result.message}
+                  text: `✅ Static Pix QR code generated successfully!
 
 **Payment Details:**
-- Pix Key: ${result.paymentDetails.pixKey}
 - Amount: ${result.paymentDetails.amountFormatted}
 - Recipient: ${result.paymentDetails.recipient}
 - City: ${result.paymentDetails.city}
@@ -377,11 +316,8 @@ The recipient can scan the QR code or copy the Pix code to complete the payment.
 **QR Code:**
 ${result.qrCodeDataUrl ? `![QR Code](${result.qrCodeDataUrl})` : 'QR Code generation failed'}
 
-⚠️ **Note**: This is a static Pix code. Payment confirmation must be checked manually by the recipient.`,
-                }, {
-                  type: 'text',
-                  text: JSON.stringify(result, null, 2)
-                }],
+⚠️ **Note**: This is a static Pix code. Payment confirmation must be checked manually by the recipient.`
+                }]
               };
               
               res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -390,9 +326,9 @@ ${result.qrCodeDataUrl ? `![QR Code](${result.qrCodeDataUrl})` : 'QR Code genera
               const status = {
                 server: 'healthy',
                 timestamp: new Date().toISOString(),
-                environment: process.env.EFI_SANDBOX === 'true' ? 'sandbox' : 'production',
-                providers: ['Efí (Gerencianet)'],
-                version: '1.0.0'
+                version: '2.0.0',
+                mode: 'static-pix',
+                status: 'operational'
               };
               
               const response = {
@@ -402,12 +338,11 @@ ${result.qrCodeDataUrl ? `![QR Code](${result.qrCodeDataUrl})` : 'QR Code genera
 
 **Status:** ${status.server}
 **Version:** ${status.version}
-**Environment:** ${status.environment}
-**Providers:** ${status.providers.join(', ')}
+**Mode:** ${status.mode}
 **Timestamp:** ${status.timestamp}
 
-✅ All systems operational`,
-                }],
+✅ All systems operational`
+                }]
               };
               
               res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -446,7 +381,7 @@ ${result.qrCodeDataUrl ? `![QR Code](${result.qrCodeDataUrl})` : 'QR Code genera
 
   async start(): Promise<void> {
     const mode = process.env.MCP_MODE || 'stdio';
-    const port = parseInt(process.env.PORT || '3000');
+    const port = parseInt('3000');
 
     if (mode === 'http') {
       await this.startHttp(port);
