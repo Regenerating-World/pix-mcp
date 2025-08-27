@@ -111,12 +111,19 @@ MIT
 - `NODE_ENV`: Environment (`development`/`production`) - Default: `development`
 - `PORT`: HTTP port when in HTTP mode - Default: `3000`
 
-## 🤖 Usage with Claude Desktop
+## 🤖 Usage with AI Tools
 
-### MCP Configuration
+### Claude Desktop
+
+1. Install the package globally:
+
+```bash
+npm install -g pix-mcp
+```
+
+2. Add to your Claude Desktop MCP configuration (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS or `%APPDATA%/Claude/claude_desktop_config.json` on Windows):
 
 ```json
-// Add to your Claude Desktop MCP configuration
 {
   "mcpServers": {
     "pix-mcp": {
@@ -130,11 +137,46 @@ MIT
 }
 ```
 
-Then in Claude:
+3. Restart Claude Desktop and start using:
 
 ```
 Create a Pix charge for R$25.50 to Maria Silva for lunch
 ```
+
+### Cursor (with MCP support)
+
+Add to your Cursor MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "pix-mcp": {
+      "command": "pix-mcp"
+    }
+  }
+}
+```
+
+### Windsurf (with MCP support)
+
+Configure in Windsurf MCP settings:
+
+```json
+{
+  "pix-mcp": {
+    "command": "npx pix-mcp",
+    "args": []
+  }
+}
+```
+
+### Any MCP-compatible tool
+
+Your tool should support MCP servers. Configure using:
+
+- **Command**: `npx pix-mcp` or `pix-mcp` (if installed globally)
+- **Protocol**: stdio
+- **Environment**: `MCP_MODE=stdio`
 
 ## 🔨 Available Tools
 
@@ -195,10 +237,14 @@ npm run format
 - [x] CRC16-CCITT validation
 - [x] All Pix key types support
 - [x] Public deployment
+- [x] MCP server configuration files
+- [x] Multi-tool compatibility
 
 ### Phase 2: MCP Discovery
 
 - [ ] Register with MCP registry
+- [ ] Add to community MCP directories
+- [ ] Integration examples for more tools
 
 ## 🔒 Security & Validation
 

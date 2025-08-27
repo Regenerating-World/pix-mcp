@@ -1,17 +1,19 @@
 {
   "name": "pix-mcp",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Standalone MCP server for generating static Pix QR codes without external dependencies",
   "main": "dist/index.js",
   "type": "module",
   "bin": {
-    "pix-mcp": "./dist/index.js"
+    "pix-mcp": "dist/index.js"
   },
   "files": [
     "dist/**/*",
     "README.md",
     "LICENSE",
-    ".env.example"
+    ".env.example",
+    "mcp-server.json",
+    "claude_desktop_config.example.json"
   ],
   "scripts": {
     "build": "tsc",
@@ -42,7 +44,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Regenerating-World/pix-mcp.git"
+    "url": "git+https://github.com/Regenerating-World/pix-mcp.git"
   },
   "homepage": "https://github.com/Regenerating-World/pix-mcp#readme",
   "bugs": {

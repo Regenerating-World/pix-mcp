@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "pix-mcp": {
+      "command": "npx",
+      "args": ["pix-mcp"],
+      "env": {
+        "MCP_MODE": "stdio"
+      }
+    }
+  }
+} 
